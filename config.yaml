@@ -1,0 +1,41 @@
+# ============================================================
+# BOT CONFIGURATION
+# Edit these values to change what the bot trades and how
+# aggressive it is. No coding needed to change this file.
+# ============================================================
+
+# Which coins to watch/trade (Kraken pair names)
+pairs:
+  - symbol: "XBTUSD"     # Bitcoin
+    news_query: "bitcoin"
+  - symbol: "ETHUSD"     # Ethereum
+    news_query: "ethereum"
+  - symbol: "SOLUSD"     # Solana
+    news_query: "solana"
+
+# Starting fake money for paper trading
+starting_balance_usd: 10000
+
+# How much of the portfolio to risk on a single trade (0.10 = 10%)
+position_size_pct: 0.10
+
+# Momentum lookback window (in hours) for price trend
+momentum_lookback_hours: 6
+
+# Momentum thresholds - how big a price move triggers interest
+momentum_buy_threshold_pct: 1.5    # price up 1.5%+ in lookback window
+momentum_sell_threshold_pct: -1.5  # price down 1.5%+ in lookback window
+
+# News sentiment thresholds (-1.0 very negative to +1.0 very positive)
+sentiment_buy_threshold: 0.20
+sentiment_sell_threshold: -0.20
+
+# Require BOTH momentum and sentiment to agree before trading?
+# (safer, fewer trades). Set to false to trade on either signal alone.
+require_signal_agreement: true
+
+# Stop-loss: auto-sell a position if it drops this % from entry
+stop_loss_pct: -5.0
+
+# Take-profit: auto-sell a position if it rises this % from entry
+take_profit_pct: 8.0

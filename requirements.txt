@@ -1,0 +1,4 @@
+requests>=2.31.0
+pyyaml>=6.0
+feedparser>=6.0.10
+vaderSentiment>=3.3.2
