@@ -1,0 +1,36 @@
+name: Run Paper Trading Bot
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run bot
+        run: python bot.py
+
+     - name: Commit updated portfolio and trade log
+        run: |
+          git config user.name "trading-bot"
+          git config user.email "bot@users.noreply.github.com"
+          [ -f portfolio.json ] && git add portfolio.json
+          [ -f trade_log.csv ] && git add trade_log.csv
+          git diff --cached --quiet || git commit -m "Update paper portfolio [skip ci]"
+          git push
