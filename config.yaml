@@ -48,4 +48,10 @@ sentiment_sell_threshold: -0.20
 
 # Require BOTH momentum and sentiment to agree before trading?
 # (safer, fewer trades). Set to false to trade on either signal alone.
-require
+require_signal_agreement: true
+
+# Stop-loss: auto-sell a position if it drops this % from entry
+stop_loss_pct: -5.0
+
+# Take-profit: auto-sell a position if it rises this % from entry
+take_profit_pct: 8.0
