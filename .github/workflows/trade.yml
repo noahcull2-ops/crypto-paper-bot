@@ -1,57 +1,36 @@
-# ============================================================
-# BOT CONFIGURATION
-# Edit these values to change what the bot trades and how
-# aggressive it is. No coding needed to change this file.
-# ============================================================
+name: Run Paper Trading Bot
 
-# Which coins to watch/trade (Kraken pair names)
-# This is a "top 10 by market cap" style list, limited to coins
-# that actually trade as simple USD pairs on Kraken.
-pairs:
-  - symbol: "XBTUSD"     # Bitcoin
-    news_query: "bitcoin"
-  - symbol: "ETHUSD"     # Ethereum
-    news_query: "ethereum"
-  - symbol: "XRPUSD"     # XRP
-    news_query: "xrp"
-  - symbol: "SOLUSD"     # Solana
-    news_query: "solana"
-  - symbol: "XDGUSD"     # Dogecoin (Kraken's symbol is XDG, not DOGE)
-    news_query: "dogecoin"
-  - symbol: "ADAUSD"     # Cardano
-    news_query: "cardano"
-  - symbol: "LINKUSD"    # Chainlink
-    news_query: "chainlink"
-  - symbol: "AVAXUSD"    # Avalanche
-    news_query: "avalanche"
-  - symbol: "LTCUSD"     # Litecoin
-    news_query: "litecoin"
-  - symbol: "DOTUSD"     # Polkadot
-    news_query: "polkadot"
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
 
-# Starting fake money for paper trading
-starting_balance_usd: 10000
+permissions:
+  contents: write
 
-# How much of the portfolio to risk on a single trade (0.10 = 10%)
-position_size_pct: 0.10
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
 
-# Momentum lookback window (in hours) for price trend
-momentum_lookback_hours: 6
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-# Momentum thresholds - how big a price move triggers interest
-momentum_buy_threshold_pct: 1.5    # price up 1.5%+ in lookback window
-momentum_sell_threshold_pct: -1.5  # price down 1.5%+ in lookback window
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-# News sentiment thresholds (-1.0 very negative to +1.0 very positive)
-sentiment_buy_threshold: 0.20
-sentiment_sell_threshold: -0.20
+      - name: Run bot
+        run: python bot.py
 
-# Require BOTH momentum and sentiment to agree before trading?
-# (safer, fewer trades). Set to false to trade on either signal alone.
-require_signal_agreement: true
-
-# Stop-loss: auto-sell a position if it drops this % from entry
-stop_loss_pct: -5.0
-
-# Take-profit: auto-sell a position if it rises this % from entry
-take_profit_pct: 8.0
+      - name: Commit updated portfolio and trade log
+        run: |
+          git config user.name "trading-bot"
+          git config user.email "bot@users.noreply.github.com"
+          [ -f portfolio.json ] && git add portfolio.json
+          [ -f trade_log.csv ] && git add trade_log.csv
+          git diff --cached --quiet || git commit -m "Update paper portfolio [skip ci]"
+          git push
