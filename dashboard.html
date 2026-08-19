@@ -1,0 +1,208 @@
+<div id="dash-root" style="--ink:#e8e4da; --paper:#0d0f0c; --panel:#14170f; --line:#2a2f22; --up:#7fb069; --down:#c9524b; --amber:#d9a441; --mute:#8a8c7f; font-family: 'JetBrains Mono', 'Courier New', monospace; background:var(--paper); color:var(--ink); min-height:100vh; padding:24px 16px;">
+
+<style>
+  #dash-root * { box-sizing: border-box; }
+  #dash-root .mono-num { font-variant-numeric: tabular-nums; }
+  #dash-root .ticker-wrap {
+    overflow: hidden; white-space: nowrap; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    padding: 8px 0; margin-bottom: 28px; background: var(--panel);
+  }
+  #dash-root .ticker-track { display: inline-block; animation: dash-scroll 28s linear infinite; }
+  @keyframes dash-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  #dash-root .ticker-item { display: inline-block; padding: 0 20px; font-size: 13px; letter-spacing: 0.02em; }
+  #dash-root .up { color: var(--up); } #dash-root .down { color: var(--down); }
+  #dash-root .header { display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px; margin-bottom: 20px; }
+  #dash-root h1 { font-size: 15px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; color: var(--mute); margin: 0; }
+  #dash-root .status-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background: var(--up); margin-right:7px; box-shadow: 0 0 6px var(--up); }
+  #dash-root .updated { font-size: 12px; color: var(--mute); }
+  #dash-root .hero { display:grid; grid-template-columns: 1.3fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 24px; }
+  #dash-root .hero-cell { background: var(--panel); padding: 24px; }
+  #dash-root .pnl-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); margin-bottom: 10px; }
+  #dash-root .pnl-value { font-size: 42px; font-weight: 700; line-height: 1; }
+  #dash-root .pnl-sub { font-size: 13px; margin-top: 8px; color: var(--mute); }
+  #dash-root .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; height: 100%; }
+  #dash-root .stat-cell { padding: 14px 18px; display:flex; flex-direction:column; justify-content:center; }
+  #dash-root .stat-label { font-size: 10.5px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.1em; }
+  #dash-root .stat-value { font-size: 20px; font-weight: 600; margin-top: 4px; }
+  #dash-root .section-label { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute); margin: 28px 0 10px; display:flex; align-items:center; gap:10px; }
+  #dash-root .section-label::after { content:''; flex:1; height:1px; background: var(--line); }
+  #dash-root table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  #dash-root th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mute); font-weight: 500; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  #dash-root td { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  #dash-root tr:last-child td { border-bottom: none; }
+  #dash-root .pill { display:inline-block; padding: 2px 8px; font-size: 11px; font-weight:700; letter-spacing:0.04em; border-radius: 2px; }
+  #dash-root .pill.buy { background: rgba(127,176,105,0.15); color: var(--up); }
+  #dash-root .pill.sell { background: rgba(201,82,75,0.15); color: var(--down); }
+  #dash-root .empty { color: var(--mute); font-size: 13px; padding: 20px 12px; text-align:center; }
+  #dash-root .footer-note { margin-top: 28px; font-size: 11.5px; color: var(--mute); line-height: 1.6; border-left: 2px solid var(--amber); padding-left: 12px; }
+  #dash-root .reload-btn { background: transparent; border: 1px solid var(--line); color: var(--ink); font-family: inherit; font-size: 11px; padding: 6px 12px; cursor: pointer; letter-spacing: 0.05em; text-transform: uppercase; }
+  #dash-root .reload-btn:hover { border-color: var(--amber); color: var(--amber); }
+  #dash-root .err { color: var(--down); font-size: 13px; padding: 20px; border: 1px dashed var(--down); }
+</style>
+
+<div class="header">
+  <h1><span class="status-dot"></span>Paper Trading Bot — Live Portfolio</h1>
+  <div style="display:flex; align-items:center; gap:14px;">
+    <span class="updated" id="last-updated">Loading…</span>
+    <button class="reload-btn" onclick="dashLoad()">Refresh</button>
+  </div>
+</div>
+
+<div class="ticker-wrap"><div class="ticker-track" id="ticker-track"></div></div>
+
+<div id="dash-content">
+  <div class="empty">Fetching portfolio data…</div>
+</div>
+
+</div>
+
+<script>
+const OWNER = "noahcull2-ops";
+const REPO = "crypto-paper-bot";
+const BRANCH = "main";
+const RAW_BASE = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/`;
+
+function fmtUSD(n) {
+  return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+}
+function fmtPct(n) {
+  const s = n >= 0 ? '+' : '';
+  return `${s}${n.toFixed(2)}%`;
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',');
+  return lines.slice(1).map(line => {
+    const parts = line.split(',');
+    const obj = {};
+    headers.forEach((h, i) => obj[h.trim()] = (parts[i] || '').trim());
+    return obj;
+  });
+}
+
+async function dashLoad() {
+  const contentEl = document.getElementById('dash-content');
+  const updatedEl = document.getElementById('last-updated');
+  contentEl.innerHTML = '<div class="empty">Fetching portfolio data…</div>';
+
+  let portfolio = null;
+  let trades = [];
+
+  try {
+    const pRes = await fetch(RAW_BASE + 'portfolio.json?_=' + Date.now());
+    if (pRes.ok) portfolio = await pRes.json();
+  } catch (e) {}
+
+  try {
+    const tRes = await fetch(RAW_BASE + 'trade_log.csv?_=' + Date.now());
+    if (tRes.ok) {
+      const text = await tRes.text();
+      trades = parseCSV(text).reverse(); // newest first
+    }
+  } catch (e) {}
+
+  if (!portfolio) {
+    contentEl.innerHTML = `<div class="err">
+      Couldn't load portfolio.json from GitHub.<br><br>
+      Checklist:<br>
+      • Is the repo <b>${OWNER}/${REPO}</b> set to Public?<br>
+      • Has the bot run at least once (portfolio.json only appears after a run)?<br>
+      • Is the branch really named <b>${BRANCH}</b>?
+    </div>`;
+    updatedEl.textContent = 'Load failed';
+    return;
+  }
+
+  updatedEl.textContent = 'Last checked: ' + new Date().toLocaleTimeString();
+
+  const starting = 10000; // matches config.yaml starting_balance_usd
+  const cash = portfolio.cash_usd || 0;
+  const positions = portfolio.positions || {};
+  const positionKeys = Object.keys(positions);
+
+  // We don't have live prices here, so value open positions at entry price
+  // (a live P&L number would need current market price too — see note below)
+  let positionsValue = 0;
+  positionKeys.forEach(k => { positionsValue += positions[k].qty * positions[k].entry_price; });
+  const totalValue = cash + positionsValue;
+  const pnl = totalValue - starting;
+  const pnlPct = (pnl / starting) * 100;
+  const pnlClass = pnl >= 0 ? 'up' : 'down';
+
+  // Ticker tape from trades
+  const tickerItems = trades.slice(0, 12).map(t => {
+    const cls = t.action === 'BUY' ? 'up' : 'down';
+    const sym = (t.pair || '').replace('USD', '');
+    return `<span class="ticker-item">${sym} <span class="${cls}">${t.action}</span> @ $${parseFloat(t.price || 0).toLocaleString()}</span>`;
+  }).join('');
+  document.getElementById('ticker-track').innerHTML = tickerItems.repeat(2) || '<span class="ticker-item">No trades yet — bot is watching and waiting for a signal</span>'.repeat(2);
+
+  let positionsRows = positionKeys.length
+    ? positionKeys.map(k => {
+        const p = positions[k];
+        const val = p.qty * p.entry_price;
+        return `<tr>
+          <td><b>${k}</b></td>
+          <td class="mono-num">${p.qty.toFixed(6)}</td>
+          <td class="mono-num">${fmtUSD(p.entry_price)}</td>
+          <td class="mono-num">${fmtUSD(val)}</td>
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="4" class="empty">No open positions right now</td></tr>`;
+
+  let tradeRows = trades.length
+    ? trades.slice(0, 25).map(t => {
+        const pillClass = t.action === 'BUY' ? 'buy' : 'sell';
+        const ts = t.timestamp ? new Date(t.timestamp).toLocaleString() : '—';
+        return `<tr>
+          <td>${ts}</td>
+          <td><b>${(t.pair || '').replace('USD','')}</b></td>
+          <td><span class="pill ${pillClass}">${t.action}</span></td>
+          <td class="mono-num">${fmtUSD(parseFloat(t.price || 0))}</td>
+          <td class="mono-num">${parseFloat(t.qty || 0).toFixed(6)}</td>
+          <td style="color:var(--mute); font-size:12px;">${t.reason || ''}</td>
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="6" class="empty">No trades yet — the bot only acts when both momentum and news sentiment line up. Check back after a few runs.</td></tr>`;
+
+  contentEl.innerHTML = `
+    <div class="hero">
+      <div class="hero-cell">
+        <div class="pnl-label">Total Paper P&amp;L (vs. $${starting.toLocaleString()} start)</div>
+        <div class="pnl-value ${pnlClass}">${fmtUSD(pnl)}</div>
+        <div class="pnl-sub ${pnlClass}">${fmtPct(pnlPct)} · Portfolio value: ${fmtUSD(totalValue)}</div>
+      </div>
+      <div class="hero-cell" style="padding:0;">
+        <div class="stat-grid">
+          <div class="stat-cell"><div class="stat-label">Cash</div><div class="stat-value">${fmtUSD(cash)}</div></div>
+          <div class="stat-cell"><div class="stat-label">In Positions</div><div class="stat-value">${fmtUSD(positionsValue)}</div></div>
+          <div class="stat-cell"><div class="stat-label">Open Positions</div><div class="stat-value">${positionKeys.length}</div></div>
+          <div class="stat-cell"><div class="stat-label">Total Trades</div><div class="stat-value">${trades.length}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Open Positions</div>
+    <table>
+      <thead><tr><th>Pair</th><th>Qty</th><th>Entry Price</th><th>Value</th></tr></thead>
+      <tbody>${positionsRows}</tbody>
+    </table>
+
+    <div class="section-label">Trade History</div>
+    <table>
+      <thead><tr><th>Time</th><th>Pair</th><th>Action</th><th>Price</th><th>Qty</th><th>Reason</th></tr></thead>
+      <tbody>${tradeRows}</tbody>
+    </table>
+
+    <div class="footer-note">
+      Note: open-position values above use the price at the time of entry, not the current market price
+      (this dashboard doesn't hit Kraken directly). For exact live P&amp;L including unrealized gains/losses
+      on open positions, check the printed summary in the bot's own GitHub Actions run logs.
+    </div>
+  `;
+}
+
+dashLoad();
+</script>
