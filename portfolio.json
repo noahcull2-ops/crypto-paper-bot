@@ -1,9 +1,13 @@
 {
-  "cash_usd": 9092.898052691868,
+  "cash_usd": 8183.6082474226805,
   "positions": {
     "ETHUSD": {
       "qty": 0.44057684344650316,
       "entry_price": 2293.18
+    },
+    "XRPUSD": {
+      "qty": 694.6127796045918,
+      "entry_price": 1.30906
     }
   },
   "history": []
