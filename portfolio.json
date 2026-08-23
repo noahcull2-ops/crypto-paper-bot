@@ -1,5 +1,10 @@
 {
-  "cash_usd": 10362.629281957965,
-  "positions": {},
+  "cash_usd": 9326.366353762169,
+  "positions": {
+    "XRPUSD": {
+      "qty": 688.2129785524606,
+      "entry_price": 1.50573
+    }
+  },
   "history": []
 }
