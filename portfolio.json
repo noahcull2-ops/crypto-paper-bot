@@ -1,9 +1,17 @@
 {
-  "cash_usd": 9317.764463585605,
+  "cash_usd": 7547.3892155043395,
   "positions": {
     "LINKUSD": {
       "qty": 92.21920125528969,
       "entry_price": 11.22659
+    },
+    "ETHUSD": {
+      "qty": 0.37071760072194304,
+      "entry_price": 2513.44
+    },
+    "XRPUSD": {
+      "qty": 573.3303263343346,
+      "entry_price": 1.46268
     }
   },
   "history": []
