@@ -1,5 +1,10 @@
 {
-  "cash_usd": 10353.071626206227,
-  "positions": {},
+  "cash_usd": 9317.764463585605,
+  "positions": {
+    "LINKUSD": {
+      "qty": 92.21920125528969,
+      "entry_price": 11.22659
+    }
+  },
   "history": []
 }
