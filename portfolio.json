@@ -1,10 +1,5 @@
 {
-  "cash_usd": 9463.669960957977,
-  "positions": {
-    "ETHUSD": {
-      "qty": 0.37071760072194304,
-      "entry_price": 2513.44
-    }
-  },
+  "cash_usd": 10359.56465074266,
+  "positions": {},
   "history": []
 }
