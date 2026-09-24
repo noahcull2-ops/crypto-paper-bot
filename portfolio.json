@@ -1,5 +1,10 @@
 {
-  "cash_usd": 10458.127938028714,
-  "positions": {},
+  "cash_usd": 9412.315144225842,
+  "positions": {
+    "XDGUSD": {
+      "qty": 11089.63849156964,
+      "entry_price": 0.0943054
+    }
+  },
   "history": []
 }
