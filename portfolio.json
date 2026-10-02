@@ -1,9 +1,13 @@
 {
-  "cash_usd": 9412.315144225842,
+  "cash_usd": 8471.083629803257,
   "positions": {
     "XDGUSD": {
       "qty": 11089.63849156964,
       "entry_price": 0.0943054
+    },
+    "XRPUSD": {
+      "qty": 618.6085811141313,
+      "entry_price": 1.52153
     }
   },
   "history": []
