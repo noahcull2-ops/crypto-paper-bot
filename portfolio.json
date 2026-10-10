@@ -1,10 +1,5 @@
 {
-  "cash_usd": 9297.846572288827,
-  "positions": {
-    "ADAUSD": {
-      "qty": 4437.136540498166,
-      "entry_price": 0.232829
-    }
-  },
+  "cash_usd": 10418.44540559164,
+  "positions": {},
   "history": []
 }
