@@ -1,5 +1,10 @@
 {
-  "cash_usd": 10307.343425611569,
-  "positions": {},
+  "cash_usd": 9276.609083050413,
+  "positions": {
+    "SOLUSD": {
+      "qty": 13.827935907716082,
+      "entry_price": 74.54
+    }
+  },
   "history": []
 }
